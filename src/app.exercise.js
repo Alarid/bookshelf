@@ -5,19 +5,31 @@ import * as React from 'react'
 import * as auth from 'auth-provider'
 import {AuthenticatedApp} from './authenticated-app'
 import {UnauthenticatedApp} from './unauthenticated-app'
+import {client} from 'utils/api-client'
+
+async function getUserFromToken() {
+  const token = await auth.getToken()
+  let user = null
+  if (token) {
+    const data = await client('me', {token})
+    user = data.user
+  }
+  return user
+}
 
 function App() {
   const [user, setUser] = React.useState(null)
 
-  const login = formData => auth.login(formData).then(user => setUser(user))
-
-  const register = formData =>
-    auth.register(formData).then(user => setUser(user))
-
-  function logout() {
+  const login = form => auth.login(form).then(u => setUser(u))
+  const register = form => auth.register(form).then(u => setUser(u))
+  const logout = () => {
     auth.logout()
     setUser(null)
   }
+
+  React.useEffect(() => {
+    getUserFromToken().then(user => setUser(user))
+  }, [])
 
   return user ? (
     <AuthenticatedApp user={user} logout={logout} />
@@ -27,8 +39,3 @@ function App() {
 }
 
 export {App}
-
-/*
-eslint
-  no-unused-vars: "off",
-*/

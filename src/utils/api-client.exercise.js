@@ -1,8 +1,15 @@
 const apiURL = process.env.REACT_APP_API_URL
 
-function client(endpoint, customConfig = {}) {
+function client(
+  endpoint,
+  {token, headers: customerHeaders, ...customConfig} = {},
+) {
   const config = {
     method: 'GET',
+    headers: {
+      Authorization: token ? `Bearer ${token}` : undefined,
+      ...customerHeaders,
+    },
     ...customConfig,
   }
 

@@ -109,6 +109,7 @@ function FullPageSpinner() {
 
 const Link = styled(RouterLink)({
   color: colors.indigo,
+  textDecoration: 'none',
   ':hover': {
     color: colors.indigoDarken10,
     textDecoration: 'underline',

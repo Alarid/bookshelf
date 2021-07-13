@@ -2,7 +2,8 @@
 
 ## 📝 Your Notes
 
-Elaborate on your learnings here in `INSTRUCTIONS.md`
+It's always better to choose server side redirects over client side, because
+client side redirects cannot set the status code properly.
 
 ## Background
 

@@ -1,5 +1,6 @@
 /** @jsx jsx */
 import {jsx} from '@emotion/core'
+
 import {Link} from 'components/lib'
 
 function NotFoundScreen() {
@@ -13,8 +14,7 @@ function NotFoundScreen() {
       }}
     >
       <div>
-        Sorry... nothing here. &nbsp;
-        <Link to="/discover">Go home</Link>
+        Sorry... nothing here. <Link to="/discover">Go home</Link>
       </div>
     </div>
   )

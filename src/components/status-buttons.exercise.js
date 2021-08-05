@@ -10,11 +10,15 @@ import {
   FaTimesCircle,
 } from 'react-icons/fa'
 import Tooltip from '@reach/tooltip'
-import {useQuery, useMutation, queryCache} from 'react-query'
-import {client} from 'utils/api-client'
 import {useAsync} from 'utils/hooks'
 import * as colors from 'styles/colors'
 import {CircleButton, Spinner} from './lib'
+import {
+  useCreateListItem,
+  useListItem,
+  useRemoveListItem,
+  useUpdateListItem,
+} from 'utils/list-items.exercise'
 
 function TooltipButton({label, highlight, onClick, icon, ...rest}) {
   const {isLoading, isError, error, run} = useAsync()
@@ -48,38 +52,10 @@ function TooltipButton({label, highlight, onClick, icon, ...rest}) {
 }
 
 function StatusButtons({user, book}) {
-  const {data: listItems} = useQuery({
-    queryKey: 'list-items',
-    queryFn: () =>
-      client(`list-items`, {token: user.token}).then(data => data.listItems),
-  })
-  const listItem = listItems?.find(item => item.bookId === book.id) ?? null
-
-  const [update] = useMutation(
-    data =>
-      client(`list-items/${listItem.id}`, {
-        token: user.token,
-        method: 'PUT',
-        data,
-      }),
-    {
-      onSettled: () => queryCache.invalidateQueries('list-items'),
-    },
-  )
-
-  const [remove] = useMutation(
-    () =>
-      client(`list-items/${listItem.id}`, {
-        token: user.token,
-        method: 'DELETE',
-      }),
-    {onSettled: () => queryCache.invalidateQueries('list-items')},
-  )
-
-  const [create] = useMutation(
-    () => client(`list-items`, {token: user.token, data: {bookId: book.id}}),
-    {onSettled: () => queryCache.invalidateQueries('list-items')},
-  )
+  const {listItem} = useListItem(user, book.id)
+  const {mutate: update} = useUpdateListItem(user)
+  const {remove} = useRemoveListItem(user)
+  const {create} = useCreateListItem(user)
 
   return (
     <React.Fragment>
@@ -104,14 +80,14 @@ function StatusButtons({user, book}) {
         <TooltipButton
           label="Remove from list"
           highlight={colors.danger}
-          onClick={() => remove()}
+          onClick={() => remove({id: listItem.id})}
           icon={<FaMinusCircle />}
         />
       ) : (
         <TooltipButton
           label="Add to list"
           highlight={colors.indigo}
-          onClick={() => create()}
+          onClick={() => create({bookId: book.id})}
           icon={<FaPlusCircle />}
         />
       )}

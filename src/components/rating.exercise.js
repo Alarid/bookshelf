@@ -4,8 +4,8 @@ import {jsx} from '@emotion/core'
 import * as React from 'react'
 import {useUpdateListItem} from 'utils/list-items'
 import {FaStar} from 'react-icons/fa'
-import {ErrorMessage} from 'components/lib'
 import * as colors from 'styles/colors'
+import {ErrorMessage} from 'components/lib'
 
 const visuallyHiddenCSS = {
   border: '0',

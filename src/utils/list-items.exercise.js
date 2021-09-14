@@ -19,7 +19,7 @@ const defaultMutationOptions = {
   onSettled: () => queryCache.invalidateQueries('list-items'),
 }
 
-function useUpdateListItem(user, options = {}) {
+function useUpdateListItem(user, options) {
   return useMutation(
     updates =>
       client(`list-items/${updates.id}`, {
@@ -27,21 +27,18 @@ function useUpdateListItem(user, options = {}) {
         data: updates,
         token: user.token,
       }),
-    {
-      ...defaultMutationOptions,
-      ...options,
-    },
+    {...defaultMutationOptions, ...options},
   )
 }
 
-function useRemoveListItem(user, options = {}) {
+function useRemoveListItem(user, options) {
   return useMutation(
     ({id}) => client(`list-items/${id}`, {method: 'DELETE', token: user.token}),
     {...defaultMutationOptions, ...options},
   )
 }
 
-function useCreateListItem(user, options = {}) {
+function useCreateListItem(user, options) {
   return useMutation(
     ({bookId}) => client(`list-items`, {data: {bookId}, token: user.token}),
     {...defaultMutationOptions, ...options},

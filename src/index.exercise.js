@@ -11,19 +11,17 @@ const queryConfig = {
     refetchOnWindowFocus: false,
     retry(failureCount, error) {
       if (error.status === 404) return false
-      return failureCount < 2
+      else if (failureCount < 2) return true
+      else return false
     },
   },
 }
 
-function AppWithProviders() {
-  return (
+loadDevTools(() => {
+  ReactDOM.render(
     <ReactQueryConfigProvider config={queryConfig}>
       <App />
-    </ReactQueryConfigProvider>
+    </ReactQueryConfigProvider>,
+    document.getElementById('root'),
   )
-}
-
-loadDevTools(() => {
-  ReactDOM.render(<AppWithProviders />, document.getElementById('root'))
 })

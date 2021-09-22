@@ -1,6 +1,6 @@
 import * as React from 'react'
 import {useQuery, queryCache} from 'react-query'
-import {AuthContext} from '../context/auth-context'
+import {AuthContext} from 'context/auth-context'
 import {client} from './api-client'
 import bookPlaceholderSvg from 'assets/book-placeholder.svg'
 
@@ -18,8 +18,6 @@ const loadingBooks = Array.from({length: 10}, (v, index) => ({
   ...loadingBook,
 }))
 
-// 🦉 note that this is *not* treated as a hook and is instead called by other hooks
-// So we'll continue to accept the user here.
 const getBookSearchConfig = (query, user) => ({
   queryKey: ['bookSearch', {query}],
   queryFn: () =>
@@ -53,10 +51,13 @@ function useBook(bookId) {
 
 function useRefetchBookSearchQuery() {
   const {user} = React.useContext(AuthContext)
-  return React.useCallback(async () => {
-    queryCache.removeQueries('bookSearch')
-    await queryCache.prefetchQuery(getBookSearchConfig('', user))
-  }, [user])
+  return React.useCallback(
+    async function refetchBookSearchQuery() {
+      queryCache.removeQueries('bookSearch')
+      await queryCache.prefetchQuery(getBookSearchConfig('', user))
+    },
+    [user],
+  )
 }
 
 const bookQueryConfig = {

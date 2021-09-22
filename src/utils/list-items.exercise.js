@@ -1,6 +1,6 @@
 import * as React from 'react'
 import {useQuery, useMutation, queryCache} from 'react-query'
-import {AuthContext} from '../context/auth-context'
+import {AuthContext} from 'context/auth-context'
 import {setQueryDataForBook} from './books'
 import {client} from './api-client'
 
@@ -10,10 +10,12 @@ function useListItems() {
     queryKey: 'list-items',
     queryFn: () =>
       client(`list-items`, {token: user.token}).then(data => data.listItems),
-    onSuccess: async listItems => {
-      for (const listItem of listItems) {
-        setQueryDataForBook(listItem.book)
-      }
+    config: {
+      onSuccess: async listItems => {
+        for (const listItem of listItems) {
+          setQueryDataForBook(listItem.book)
+        }
+      },
     },
   })
   return data ?? []
@@ -59,7 +61,6 @@ function useUpdateListItem(options) {
 
 function useRemoveListItem(options) {
   const {user} = React.useContext(AuthContext)
-
   return useMutation(
     ({id}) => client(`list-items/${id}`, {method: 'DELETE', token: user.token}),
     {

@@ -29,6 +29,7 @@ function DiscoverBooksScreen() {
     <div>
       <div>
         <form onSubmit={handleSearchClick}>
+          <h1>WHAT UUUUUP</h1>
           <Input
             placeholder="Search books..."
             id="search"

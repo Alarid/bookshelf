@@ -4,6 +4,11 @@ import {Dialog} from './lib'
 
 const ModalContext = React.createContext()
 
+const callAll =
+  (...fns) =>
+  (...args) =>
+    fns.forEach(fn => fn && fn(...args))
+
 function Modal({children}) {
   const [isOpen, setIsOpen] = React.useState(false)
 
@@ -17,24 +22,17 @@ function Modal({children}) {
 function ModalDismissButton({children: button}) {
   const {setIsOpen} = React.useContext(ModalContext)
   return React.cloneElement(button, {
-    onClick() {
-      setIsOpen(false)
-    },
+    onClick: callAll(() => setIsOpen(false), button.props.onClick),
   })
 }
 
 function ModalOpenButton({children: button}) {
   const {setIsOpen} = React.useContext(ModalContext)
   return React.cloneElement(button, {
-    onClick() {
-      setIsOpen(true)
-    },
+    onClick: callAll(() => setIsOpen(true), button.props.onClick),
   })
 }
 
-// 🐨 create a ModalContents component which renders the Dialog.
-// Set the isOpen prop and the onDismiss prop should set isOpen to close
-// 💰 be sure to forward along the rest of the props (especially children).
 function ModalContents(props) {
   const {isOpen, setIsOpen} = React.useContext(ModalContext)
   return (

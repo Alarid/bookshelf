@@ -36,7 +36,7 @@ function Profiler({metadata, phases, ...props}) {
         baseDuration,
         startTime,
         commitTime,
-        interactions,
+        interactions: [...interactions],
       })
     }
   }
@@ -44,3 +44,4 @@ function Profiler({metadata, phases, ...props}) {
 }
 
 export {Profiler}
+export {unstable_trace as trace, unstable_wrap as wrap} from 'scheduler/tracing'

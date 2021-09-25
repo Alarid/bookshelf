@@ -18,6 +18,7 @@ async function getUser() {
 
   return user
 }
+const userPromise = getUser()
 
 const AuthContext = React.createContext()
 AuthContext.displayName = 'AuthContext'
@@ -43,7 +44,6 @@ function AuthProvider(props) {
     // have to wait until the app mounts before we kick off
     // the request.
     // We're moving from "Fetch on render" to "Render WHILE you fetch"!
-    const userPromise = getUser()
     run(userPromise)
   }, [run])
 
@@ -60,12 +60,10 @@ function AuthProvider(props) {
     setData(null)
   }, [setData])
 
-  const value = React.useMemo(() => ({user, login, logout, register}), [
-    login,
-    logout,
-    register,
-    user,
-  ])
+  const value = React.useMemo(
+    () => ({user, login, logout, register}),
+    [login, logout, register, user],
+  )
 
   if (isLoading || isIdle) {
     return <FullPageSpinner />

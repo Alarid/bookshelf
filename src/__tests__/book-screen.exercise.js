@@ -1,5 +1,6 @@
 import * as React from 'react'
 import {render, screen, waitForElementToBeRemoved} from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import {queryCache} from 'react-query'
 import {buildUser, buildBook} from 'test/generate'
 import * as auth from 'auth-provider'
@@ -8,13 +9,7 @@ import {App} from 'app'
 import * as usersDB from 'test/data/users'
 import * as booksDB from 'test/data/books'
 import * as listItemsDB from 'test/data/list-items'
-
-beforeEach(async () => {
-  const user = buildUser()
-  await usersDB.create(user)
-  const authUser = await usersDB.authenticate(user)
-  window.localStorage.setItem(auth.localStorageKey, authUser.token)
-})
+import {formatDate} from 'utils/misc'
 
 afterEach(async () => {
   queryCache.clear()
@@ -27,6 +22,11 @@ afterEach(async () => {
 })
 
 test('renders all the book information', async () => {
+  const user = buildUser()
+  await usersDB.create(user)
+  const authUser = await usersDB.authenticate(user)
+  window.localStorage.setItem(auth.localStorageKey, authUser.token)
+
   const book = await booksDB.create(buildBook())
   window.history.pushState({}, 'The React Bookshelf App', `/book/${book.id}`)
 
@@ -55,8 +55,52 @@ test('renders all the book information', async () => {
     screen.queryByRole('button', {name: /mark as unread/i}),
   ).not.toBeInTheDocument()
   expect(
-    screen.queryByRole('textarea', {name: /notes/i}),
+    screen.queryByRole('textbox', {name: /notes/i}),
   ).not.toBeInTheDocument()
   expect(screen.queryByRole('radio', {name: /star/i})).not.toBeInTheDocument()
   expect(screen.queryByLabelText(/start date/i)).not.toBeInTheDocument()
+})
+
+test('can create a list item for the book', async () => {
+  const user = buildUser()
+  await usersDB.create(user)
+  const authUser = await usersDB.authenticate(user)
+  window.localStorage.setItem(auth.localStorageKey, authUser.token)
+
+  const book = await booksDB.create(buildBook())
+  window.history.pushState({}, 'The React Bookshelf App', `/book/${book.id}`)
+
+  render(<App />, {wrapper: AppProviders})
+  await waitForElementToBeRemoved(() => [
+    ...screen.queryAllByLabelText(/loading/i),
+    ...screen.queryAllByText(/loading/i),
+  ])
+
+  const addToListButton = screen.getByRole('button', {name: /add to list/i})
+  userEvent.click(addToListButton)
+  expect(addToListButton).toBeDisabled()
+
+  await waitForElementToBeRemoved(() => [
+    ...screen.queryAllByLabelText(/loading/i),
+    ...screen.queryAllByText(/loading/i),
+  ])
+
+  expect(
+    screen.getByRole('button', {name: /mark as read/i}),
+  ).toBeInTheDocument()
+  expect(
+    screen.getByRole('button', {name: /remove from list/i}),
+  ).toBeInTheDocument()
+  expect(screen.getByRole('textbox', {name: /notes/i})).toBeInTheDocument()
+
+  const startDateNode = screen.getByLabelText(/start date/i)
+  expect(startDateNode).toHaveTextContent(formatDate(new Date()))
+
+  expect(
+    screen.queryByRole('button', {name: /add to list/i}),
+  ).not.toBeInTheDocument()
+  expect(
+    screen.queryByRole('button', {name: /mark as unread/i}),
+  ).not.toBeInTheDocument()
+  expect(screen.queryByRole('radio', {name: /star/i})).not.toBeInTheDocument()
 })

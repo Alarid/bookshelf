@@ -1,5 +1,9 @@
 import * as React from 'react'
-import {render, screen, waitForElementToBeRemoved} from '@testing-library/react'
+import {
+  render as rtlRender,
+  screen,
+  waitForElementToBeRemoved,
+} from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import {queryCache} from 'react-query'
 import {buildUser, buildBook} from 'test/generate'
@@ -21,20 +25,33 @@ afterEach(async () => {
   ])
 })
 
-test('renders all the book information', async () => {
-  const user = buildUser()
+async function loginAsUser(userProperties) {
+  const user = buildUser(userProperties)
   await usersDB.create(user)
   const authUser = await usersDB.authenticate(user)
   window.localStorage.setItem(auth.localStorageKey, authUser.token)
+  return authUser
+}
 
-  const book = await booksDB.create(buildBook())
-  window.history.pushState({}, 'The React Bookshelf App', `/book/${book.id}`)
-
-  render(<App />, {wrapper: AppProviders})
+async function waitForLoadingToFinish() {
   await waitForElementToBeRemoved(() => [
     ...screen.queryAllByLabelText(/loading/i),
     ...screen.queryAllByText(/loading/i),
   ])
+}
+
+async function render(ui, {route = '/list', user, ...renderOptions}) {
+  user = typeof user === 'undefined' ? await loginAsUser() : user
+  window.history.pushState({}, 'The React Bookshelf App', route)
+  const renderUtils = rtlRender(ui, {wrapper: AppProviders, ...renderOptions})
+  await waitForLoadingToFinish()
+  return {user, ...renderUtils}
+}
+
+test('renders all the book information', async () => {
+  const book = await booksDB.create(buildBook())
+  const route = `/book/${book.id}`
+  await render(<App />, {route})
 
   expect(screen.getByRole('heading', {name: book.title})).toBeInTheDocument()
   expect(screen.getByText(book.author)).toBeInTheDocument()
@@ -62,28 +79,15 @@ test('renders all the book information', async () => {
 })
 
 test('can create a list item for the book', async () => {
-  const user = buildUser()
-  await usersDB.create(user)
-  const authUser = await usersDB.authenticate(user)
-  window.localStorage.setItem(auth.localStorageKey, authUser.token)
-
   const book = await booksDB.create(buildBook())
-  window.history.pushState({}, 'The React Bookshelf App', `/book/${book.id}`)
-
-  render(<App />, {wrapper: AppProviders})
-  await waitForElementToBeRemoved(() => [
-    ...screen.queryAllByLabelText(/loading/i),
-    ...screen.queryAllByText(/loading/i),
-  ])
+  const route = `/book/${book.id}`
+  await render(<App />, {route})
 
   const addToListButton = screen.getByRole('button', {name: /add to list/i})
   userEvent.click(addToListButton)
   expect(addToListButton).toBeDisabled()
 
-  await waitForElementToBeRemoved(() => [
-    ...screen.queryAllByLabelText(/loading/i),
-    ...screen.queryAllByText(/loading/i),
-  ])
+  await waitForLoadingToFinish()
 
   expect(
     screen.getByRole('button', {name: /mark as read/i}),

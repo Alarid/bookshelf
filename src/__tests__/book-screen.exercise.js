@@ -5,36 +5,36 @@ import {buildUser, buildBook} from 'test/generate'
 import * as auth from 'auth-provider'
 import {AppProviders} from 'context'
 import {App} from 'app'
+import * as usersDB from 'test/data/users'
+import * as booksDB from 'test/data/books'
+import * as listItemsDB from 'test/data/list-items'
+
+beforeEach(async () => {
+  const user = buildUser()
+  await usersDB.create(user)
+  const authUser = await usersDB.authenticate(user)
+  window.localStorage.setItem(auth.localStorageKey, authUser.token)
+})
 
 afterEach(async () => {
   queryCache.clear()
-  await auth.logout()
+  await Promise.all([
+    auth.logout(),
+    usersDB.reset(),
+    booksDB.reset(),
+    listItemsDB.reset(),
+  ])
 })
 
 test('renders all the book information', async () => {
-  const user = buildUser()
-  const book = buildBook()
-
-  window.localStorage.setItem(auth.localStorageKey, 'fakeuser')
+  const book = await booksDB.create(buildBook())
   window.history.pushState({}, 'The React Bookshelf App', `/book/${book.id}`)
 
-  const originalFetch = window.fetch
-  window.fetch = async (url, config) => {
-    if (url.endsWith('/bootstrap')) {
-      return {
-        ok: true,
-        json: async () => ({user, listItems: []}),
-      }
-    } else if (url.endsWith('/list-items')) {
-      return Promise.resolve({ok: true, json: async () => ({listItems: []})})
-    } else if (url.endsWith(`/books/${book.id}`)) {
-      return Promise.resolve({ok: true, json: async () => ({book})})
-    }
-    return originalFetch(url, config)
-  }
-
   render(<App />, {wrapper: AppProviders})
-  await waitForElementToBeRemoved(() => screen.queryByLabelText(/loading/i))
+  await waitForElementToBeRemoved(() => [
+    ...screen.queryAllByLabelText(/loading/i),
+    ...screen.queryAllByText(/loading/i),
+  ])
 
   expect(screen.getByRole('heading', {name: book.title})).toBeInTheDocument()
   expect(screen.getByText(book.author)).toBeInTheDocument()
